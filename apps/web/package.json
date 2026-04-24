@@ -2,6 +2,8 @@
   "name": "@voicecanvas/web",
   "private": true,
   "version": "0.0.0",
+  "description": "React and Vite workbench for VoiceCanvas.",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

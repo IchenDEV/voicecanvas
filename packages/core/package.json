@@ -1,7 +1,9 @@
 {
   "name": "@voicecanvas/core",
   "version": "0.0.0",
+  "description": "Canvas document model, patch engine, validator, and Mermaid export for VoiceCanvas.",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "exports": {
     ".": {

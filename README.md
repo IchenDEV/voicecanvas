@@ -1,5 +1,7 @@
 # VoiceCanvas
 
+[中文说明](README.zh-CN.md)
+
 VoiceCanvas is an experimental voice-first diagram canvas. It turns natural speech into validated graph patches so a diagram can change while the user keeps speaking.
 
 ![VoiceCanvas workbench](docs/assets/voicecanvas-workbench.png)
@@ -88,7 +90,7 @@ pnpm dev:web    # start only the Vite app
 pnpm dev:api    # start only the Hono API
 pnpm test       # run unit tests
 pnpm lint       # run lint checks
-pnpm build      # build all packages and apps
+pnpm build      # build apps and type-check packages
 pnpm test:e2e   # run Playwright smoke tests
 ```
 

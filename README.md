@@ -2,6 +2,8 @@
 
 VoiceCanvas is an experimental voice-first diagram canvas. It turns natural speech into validated graph patches so a diagram can change while the user keeps speaking.
 
+![VoiceCanvas workbench](docs/assets/voicecanvas-workbench.png)
+
 The core pipeline is:
 
 ```text

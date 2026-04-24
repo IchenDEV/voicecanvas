@@ -1,0 +1,33 @@
+{
+  "name": "voicecanvas",
+  "version": "0.0.0",
+  "description": "Voice-first diagram canvas with validated graph patches.",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IchenDEV/voicecanvas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/IchenDEV/voicecanvas/issues"
+  },
+  "homepage": "https://github.com/IchenDEV/voicecanvas#readme",
+  "scripts": {
+    "dev": "pnpm --filter @voicecanvas/api --filter @voicecanvas/web --parallel dev",
+    "dev:api": "pnpm --filter @voicecanvas/api dev",
+    "dev:web": "pnpm --filter @voicecanvas/web dev",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "playwright test",
+    "lint": "pnpm -r --if-present lint"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^24.12.2",
+    "tsx": "^4.21.0",
+    "typescript": "~6.0.2",
+    "vitest": "^4.0.15"
+  }
+}

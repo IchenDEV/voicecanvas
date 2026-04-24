@@ -1,0 +1,115 @@
+.canvas-stage {
+  position: relative;
+  min-height: 100vh;
+  padding: 96px 32px 128px;
+}
+
+.canvas-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.56;
+  background-image:
+    linear-gradient(rgba(19, 19, 19, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(19, 19, 19, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at 45% 42%, black, transparent 72%);
+}
+
+.canvas-shell {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: calc(100vh - 230px);
+  place-items: center;
+}
+
+.mermaid-canvas {
+  width: min(980px, 100%);
+  min-height: 420px;
+  padding: 24px;
+}
+
+.mermaid-canvas svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 22px 34px rgba(20, 20, 20, 0.12));
+}
+
+.mermaid-canvas .edgeLabel,
+.mermaid-canvas .edgeLabel p,
+.mermaid-canvas .labelBkg {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.mermaid-canvas .edgeLabel rect {
+  fill: transparent !important;
+}
+
+.empty-canvas,
+.mermaid-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #777;
+  font-size: 14px;
+}
+
+.confirmation-popover {
+  position: absolute;
+  z-index: 10;
+  top: 28%;
+  left: min(720px, 48vw);
+  width: min(310px, calc(100vw - 42px));
+  padding: 14px;
+  border: 1px solid rgba(25, 25, 25, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 24px 70px rgba(25, 25, 25, 0.16);
+  backdrop-filter: blur(20px);
+}
+
+.confirmation-title {
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.candidate-list {
+  display: grid;
+  gap: 8px;
+}
+
+.candidate-list button {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 2px 9px;
+  padding: 10px;
+  border: 1px solid rgba(25, 25, 25, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  color: #151515;
+  text-align: left;
+  cursor: pointer;
+}
+
+.candidate-list button span {
+  display: grid;
+  grid-row: span 2;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff5a3d;
+  color: #fff;
+  font-size: 12px;
+}
+
+.candidate-list button strong {
+  font-size: 13px;
+}
+
+.candidate-list button small {
+  color: #777;
+}

@@ -1,0 +1,23 @@
+{
+  "skill_name": "voicecanvas-dev-debug-acceptance",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "继续开发 VoiceCanvas 的 Patch 引擎，新增删除节点后自动清理相关边，并完成验收。",
+      "expected_output": "Uses packages/core tests first, preserves Validator/Patch boundary, runs pnpm test/lint/build/test:e2e, and mentions Browser Use acceptance.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "调试 VoiceCanvas 里 add a step here 会直接改图的问题。",
+      "expected_output": "Reproduces with /api/dev/reset and text-segment, verifies pendingPatch/candidates, fixes low-confidence confirmation instead of forcing mutation, and adds API or E2E coverage.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "接 OpenAI Realtime 之后做完整验收。",
+      "expected_output": "Checks missing-key behavior, confirms Realtime cannot directly mutate CanvasDoc, runs local mock path tests, then performs Browser Use acceptance on localhost.",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+.workbench {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 246, 241, 0.92)),
+    #f7f4ef;
+  color: #151515;
+}
+
+.brand-lockup,
+.command-status,
+.command-actions,
+.sheet-title,
+.confirmation-title {
+  display: flex;
+  align-items: center;
+}
+
+.icon-button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(25, 25, 25, 0.08);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  color: #151515;
+  cursor: pointer;
+}
+
+.icon-button.is-active {
+  background: #151515;
+  color: #fff;
+}

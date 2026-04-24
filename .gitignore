@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+*.tsbuildinfo
+
+# local environment
+.env
+.env.*
+!.env.example
+
+# test output
+coverage/
+playwright-report/
+test-results/
+
+# logs and system files
+*.log
+.DS_Store

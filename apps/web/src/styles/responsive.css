@@ -1,0 +1,29 @@
+@media (max-width: 860px) {
+  .command-bar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .command-status {
+    display: none;
+  }
+
+  .canvas-stage {
+    padding: 92px 18px 210px;
+  }
+
+  .history-sheet {
+    left: 16px;
+    right: 16px;
+    top: 84px;
+    width: auto;
+    max-height: min(260px, calc(100vh - 182px));
+  }
+
+  .voice-capsule {
+    left: 16px;
+    right: auto;
+    grid-template-columns: 38px minmax(64px, auto);
+    border-radius: 999px;
+    transform: none;
+  }
+}

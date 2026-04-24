@@ -1,0 +1,45 @@
+.command-bar {
+  position: fixed;
+  z-index: 20;
+  top: 18px;
+  left: 50%;
+  display: grid;
+  width: min(760px, calc(100vw - 32px));
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 10px;
+  border: 1px solid rgba(25, 25, 25, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 48px rgba(20, 20, 20, 0.12);
+  backdrop-filter: blur(18px);
+  transform: translateX(-50%);
+}
+
+.brand-lockup {
+  gap: 9px;
+  padding-left: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  display: block;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.command-status {
+  gap: 7px;
+  color: #4c4c4c;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.command-actions {
+  justify-content: flex-end;
+  gap: 6px;
+}

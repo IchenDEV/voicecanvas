@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { canvasToMermaid, type CanvasDoc, type Patch } from '@voicecanvas/core'
 import type { WorkspaceResponse } from '../types'
+import { debugRecognizedSpeech, debugWorkspaceAction } from '../debug-logger'
 
 export function useWorkspace() {
   const [canvas, setCanvas] = useState<CanvasDoc | null>(null)
@@ -22,6 +23,7 @@ export function useWorkspace() {
       }
 
       setStatus('Planning')
+      debugRecognizedSpeech(text)
       try {
         const response = await fetch('/api/commands/text-segment', {
           method: 'POST',
@@ -29,6 +31,7 @@ export function useWorkspace() {
           body: JSON.stringify({ text, selectedObjectIds }),
         })
         const workspace = (await response.json()) as WorkspaceResponse
+        debugWorkspaceAction('text-segment', workspace)
         applyWorkspace(workspace)
         setStatus(workspace.status === 'needs_confirm' ? 'Which node did you mean?' : idleStatus(keepListening))
         return workspace
@@ -50,6 +53,7 @@ export function useWorkspace() {
           body: JSON.stringify({ candidateId }),
         })
         const workspace = (await response.json()) as WorkspaceResponse
+        debugWorkspaceAction('confirm-candidate', workspace)
         applyWorkspace(workspace)
         setStatus(idleStatus(keepListening))
         return workspace
@@ -67,6 +71,7 @@ export function useWorkspace() {
       try {
         const response = await fetch('/api/patch/undo', { method: 'POST' })
         const workspace = (await response.json()) as WorkspaceResponse
+        debugWorkspaceAction('undo', workspace)
         applyWorkspace(workspace)
         setStatus(idleStatus(keepListening))
         return workspace

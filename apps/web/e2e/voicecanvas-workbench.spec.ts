@@ -78,3 +78,25 @@ test('history panel overlays the canvas without shifting it', async ({ page }) =
   expect(Math.abs(afterCenter - beforeCenter)).toBeLessThanOrEqual(1)
   expect(panelBox!.height).toBeLessThanOrEqual(420)
 })
+
+test('rendered diagram stays centered in the canvas', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1006, height: 867 })
+  await request.post('http://localhost:8787/api/commands/text-segment', {
+    data: {
+      text: 'create signup flow... change phone number step to collect mobile number... delete verify phone step...',
+    },
+  })
+  await page.reload()
+
+  await expect(page.getByText('Collect mobile number')).toBeVisible()
+  await expect(page.getByText('Verify phone')).toHaveCount(0)
+
+  const stageBox = await page.getByLabel('Diagram canvas').boundingBox()
+  const diagramBox = await page.locator('.mermaid-canvas svg').boundingBox()
+  expect(stageBox).not.toBeNull()
+  expect(diagramBox).not.toBeNull()
+
+  const stageCenter = stageBox!.x + stageBox!.width / 2
+  const diagramCenter = diagramBox!.x + diagramBox!.width / 2
+  expect(Math.abs(diagramCenter - stageCenter)).toBeLessThanOrEqual(24)
+})

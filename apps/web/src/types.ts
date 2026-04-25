@@ -5,6 +5,13 @@ export type WorkspaceResponse = {
   history: Patch[]
   pendingPatch: Patch | null
   status?: string
+  patch?: Patch
+  results?: WorkspaceResult[]
+}
+
+export type WorkspaceResult = {
+  status?: string
+  patch?: Patch
 }
 
 export type RealtimeProviderResponse = {

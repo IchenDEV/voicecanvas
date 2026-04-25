@@ -5,6 +5,12 @@ import {
   createOtpPatch,
   createSignupFlowPatch,
 } from './mock-patch-builders'
+import {
+  createDeleteNodePatch,
+  createUpdateNodePatch,
+  isDeleteIntent,
+  isUpdateIntent,
+} from './mock-edit-compiler'
 import type { CanvasDoc, Patch, VoiceSegment } from './types'
 
 type CompileOptions = {
@@ -25,18 +31,20 @@ export function compileMockPatch({ segment, canvas, selectedObjectIds = [] }: Co
     return createSignupFlowPatch(text, segment.id)
   }
 
+  if (isDeleteIntent(normalized)) {
+    return createDeleteNodePatch(text, segment.id, canvas, selectedObjectIds)
+  }
+
+  if (isUpdateIntent(normalized)) {
+    return createUpdateNodePatch(text, segment.id, canvas, selectedObjectIds)
+  }
+
   if (normalized.includes('otp') || normalized.includes('verification code') || normalized.includes('验证码')) {
     return createOtpPatch(text, segment.id, canvas)
   }
 
   if (normalized.includes('failure') || normalized.includes('fail') || normalized.includes('失败')) {
     return createFailureBackPatch(text, segment.id, canvas)
-  }
-
-  if (normalized.includes('rename') || normalized.includes('改名')) {
-    const target = canvas.nodes.at(-1)
-    const ops = target ? [{ type: 'updateNode' as const, nodeId: target.id, label: 'Reviewed step' }] : []
-    return basePatch(text, segment.id, ops)
   }
 
   return basePatch(text, segment.id, [])

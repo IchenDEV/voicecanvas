@@ -24,13 +24,16 @@
 }
 
 .mermaid-canvas {
+  display: flex;
+  justify-content: center;
   width: min(980px, 100%);
   min-height: 420px;
   padding: 24px;
 }
 
 .mermaid-canvas svg {
-  width: 100%;
+  width: auto !important;
+  max-width: 100%;
   height: auto;
   filter: drop-shadow(0 22px 34px rgba(20, 20, 20, 0.12));
 }

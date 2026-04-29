@@ -70,13 +70,14 @@ export const acceptanceCases: AcceptanceCase[] = [
     requiredForStage1: true,
   },
   {
-    id: 'realtime-doubao-provider-only',
-    title: 'Realtime provider is Doubao only',
+    id: 'realtime-openai-voice-component',
+    title: 'Realtime voice uses OpenAI component',
     layer: 'realtime',
     command: 'pnpm --filter @voicecanvas/api test',
     expected: [
-      'GET /api/realtime/provider returns provider doubao-asr.',
-      'The legacy realtime session route returns 404.',
+      'GET /api/realtime/provider returns provider openai-realtime.',
+      'POST /api/realtime/openai/session requires OPENAI_API_KEY before proxying.',
+      'The session route forwards multipart WebRTC offers to OpenAI Realtime calls.',
       'The local text simulation path remains usable without credentials.',
     ],
     requiredForStage1: true,

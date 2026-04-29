@@ -13,6 +13,8 @@
   ·
   <a href="docs/prd/README.md">Product docs</a>
   ·
+  <a href="docs/prototype-acceptance.md">Prototype check</a>
+  ·
   <a href="#quick-start">Quick start</a>
   ·
   <a href="#contributing">Contributing</a>
@@ -44,13 +46,13 @@ The long-term bet is simple: diagrams should change at the speed of a conversati
 
 | Area | Status | What it does |
 | --- | --- | --- |
-| Voice-first command flow | Working prototype | Accepts text segments and optional realtime ASR input. |
+| Voice-first command flow | Working prototype | Accepts text segments and OpenAI Realtime voice input. |
 | Patch-based editing | Working prototype | Converts commands into atomic graph operations. |
 | Validation layer | Working prototype | Checks patch drafts before they mutate the canvas. |
 | Mermaid renderer | Working prototype | Renders the first diagram surface with Mermaid. |
 | Low-confidence confirmation | Working prototype | Shows target candidates before applying ambiguous edits. |
 | History and undo | Working prototype | Stores applied patches and restores the previous canvas state. |
-| Doubao realtime ASR bridge | Optional | Proxies microphone audio to Doubao ASR through the API server. |
+| OpenAI Realtime voice | Optional | Uses `openai/realtime-voice-component` in the browser and proxies sessions through the API server. |
 | External patch compiler | Optional | Uses an OpenAI-compatible model endpoint when configured. |
 | Local mock compiler | Built in | Runs the demo without model credentials. |
 | JSON export | Working prototype | Exports the current structured canvas document. |
@@ -69,14 +71,14 @@ flowchart LR
   H --> I[Undo and export]
 ```
 
-The model is treated as a patch planner. It can propose a draft, but the canvas only changes after the draft passes validation and the patch engine applies it. That split keeps graph state inspectable, makes undo reliable, and leaves room to swap ASR or model providers later.
+The model is treated as a patch planner. It can propose a draft, but the canvas only changes after the draft passes validation and the patch engine applies it. That split keeps graph state inspectable, makes undo reliable, and keeps voice recognition separate from diagram mutation.
 
 ## Repository Layout
 
 ```text
 apps/
   web/          React + Vite workbench
-  api/          Hono API, workspace state, realtime ASR bridge
+  api/          Hono API, workspace state, realtime session proxy
 packages/
   core/         CanvasDoc model, patch engine, validator, Mermaid export
   ai/           OpenAI-compatible model patch compiler adapter
@@ -114,19 +116,17 @@ The API server runs on:
 http://localhost:8787
 ```
 
-The Vite dev server proxies `/api` and realtime WebSocket traffic to the API server. You can run the project without external credentials; empty model settings use the built-in mock patch compiler.
+The Vite dev server proxies `/api` traffic to the API server. You can run the project without external credentials; empty model settings use the built-in mock patch compiler.
 
 ## Configuration
 
 Create `.env` from `.env.example` and fill only the providers you want to use.
 
-### Realtime ASR
+### Realtime Voice
 
 ```bash
-DOUBAO_API_KEY=
-DOUBAO_ASR_RESOURCE_ID=volc.bigasr.sauc.duration
-DOUBAO_ASR_MODEL=bigmodel
-DOUBAO_ASR_URL=wss://openspeech.bytedance.com/api/v3/sauc/bigmodel_async
+OPENAI_API_KEY=
+OPENAI_REALTIME_MODEL=gpt-realtime-1.5
 ```
 
 ### External Patch Compiler
@@ -151,6 +151,9 @@ When the patch compiler variables are empty, VoiceCanvas uses the local mock com
 | `pnpm lint` | Run lint checks. |
 | `pnpm build` | Build apps and type-check packages. |
 | `pnpm test:e2e` | Run Playwright smoke tests. |
+| `pnpm check:prototype` | Run the full Prototype check suite. |
+| `pnpm check:alpha` | Run the Alpha check suite and local eval report. |
+| `pnpm check:alpha:realtime` | Run the OpenAI Realtime session proxy tests. |
 
 ## API Surface
 
@@ -164,7 +167,8 @@ When the patch compiler variables are empty, VoiceCanvas uses the local mock com
 | `POST` | `/api/patch/apply` | Apply a provided patch draft. |
 | `POST` | `/api/patch/confirm` | Confirm a low-confidence candidate. |
 | `POST` | `/api/patch/undo` | Restore the previous patch state. |
-| `GET` | `/api/realtime/provider` | Read realtime ASR provider settings. |
+| `GET` | `/api/realtime/provider` | Read realtime voice provider settings. |
+| `POST` | `/api/realtime/openai/session` | Proxy WebRTC session offers to OpenAI Realtime. |
 | `GET` | `/api/export/json` | Export the current `CanvasDoc`. |
 
 ## Development Notes

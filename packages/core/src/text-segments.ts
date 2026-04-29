@@ -1,11 +1,11 @@
 import { createId } from './ids'
-import type { VoiceSegment } from './types'
+import type { VoiceProviderName, VoiceSegment } from './types'
 
-export function createTextSegment(text: string): VoiceSegment {
+export function createTextSegment(text: string, provider: VoiceProviderName = 'text-sim'): VoiceSegment {
   const now = Date.now()
   return {
     id: createId('segment'),
-    provider: 'text-sim',
+    provider,
     finalTranscript: text.trim(),
     confidence: 1,
     startedAt: now,

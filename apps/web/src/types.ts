@@ -1,4 +1,4 @@
-import type { CanvasDoc, Patch } from '@voicecanvas/core'
+import type { CanvasDoc, Patch, VoiceSegment } from '@voicecanvas/core'
 
 export type WorkspaceResponse = {
   canvas: CanvasDoc
@@ -12,13 +12,12 @@ export type WorkspaceResponse = {
 export type WorkspaceResult = {
   status?: string
   patch?: Patch
+  segment?: VoiceSegment
 }
 
 export type RealtimeProviderResponse = {
-  provider: 'doubao-asr'
+  provider: 'openai-realtime'
   configured: boolean
-  websocketPath: string
-  sampleRate: number
   model: string
-  resourceId: string
+  sessionPath: string
 }

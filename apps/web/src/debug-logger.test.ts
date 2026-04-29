@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { debugRecognizedSpeech, debugWorkspaceAction } from './debug-logger'
+import { debugRealtimeEvent, debugRecognizedSpeech, debugVoiceToolCall, debugWorkspaceAction } from './debug-logger'
 import type { WorkspaceResponse } from './types'
 
 describe('debug logger', () => {
@@ -7,18 +7,24 @@ describe('debug logger', () => {
     vi.restoreAllMocks()
   })
 
-  it('prints recognized speech to the browser debug console', () => {
-    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+  it('lists recognized speech in the browser debug console', () => {
+    const groupCollapsed = vi.spyOn(console, 'groupCollapsed').mockImplementation(() => undefined)
+    const table = vi.spyOn(console, 'table').mockImplementation(() => undefined)
+    const groupEnd = vi.spyOn(console, 'groupEnd').mockImplementation(() => undefined)
 
-    debugRecognizedSpeech('delete verify phone step')
+    debugRecognizedSpeech('delete verify phone step', ['node_verify'])
 
-    expect(debug).toHaveBeenCalledWith('[VoiceCanvas] speech', {
-      transcript: 'delete verify phone step',
-    })
+    expect(groupCollapsed).toHaveBeenCalledWith('[VoiceCanvas] speech result')
+    expect(table).toHaveBeenCalledWith([
+      { transcript: 'delete verify phone step', selectedObjectIds: 'node_verify', length: 24 },
+    ])
+    expect(groupEnd).toHaveBeenCalled()
   })
 
-  it('prints applied action and patch ops to the browser debug console', () => {
-    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+  it('lists applied action and patch ops in the browser debug console', () => {
+    const groupCollapsed = vi.spyOn(console, 'groupCollapsed').mockImplementation(() => undefined)
+    const table = vi.spyOn(console, 'table').mockImplementation(() => undefined)
+    vi.spyOn(console, 'groupEnd').mockImplementation(() => undefined)
     const workspace: WorkspaceResponse = {
       canvas: emptyCanvas(),
       history: [],
@@ -38,12 +44,84 @@ describe('debug logger', () => {
 
     debugWorkspaceAction('text-segment', workspace)
 
-    expect(debug).toHaveBeenCalledWith('[VoiceCanvas] action', {
-      action: 'text-segment',
-      status: 'applied',
-      patches: [{ id: 'patch_1', sourceText: 'delete verify phone step', status: 'applied', ops: ['deleteNode'] }],
-      pendingCandidates: [],
+    expect(groupCollapsed).toHaveBeenCalledWith('[VoiceCanvas] action result: text-segment')
+    expect(table).toHaveBeenNthCalledWith(1, [
+      {
+        action: 'text-segment',
+        status: 'applied',
+        diagramType: 'flowchart',
+        canvasVersion: 0,
+        nodeCount: 0,
+        edgeCount: 0,
+        mermaidLineCount: 0,
+        historyCount: 0,
+        pending: false,
+      },
+    ])
+    expect(table).toHaveBeenNthCalledWith(2, [
+      {
+        patchId: 'patch_1',
+        sourceText: 'delete verify phone step',
+        status: 'applied',
+        confidence: 0.9,
+        opCount: 1,
+      },
+    ])
+    expect(table).toHaveBeenNthCalledWith(3, [
+      {
+        patchId: 'patch_1',
+        opIndex: 1,
+        type: 'deleteNode',
+        target: 'node_verify',
+        sourcePreview: '',
+        details: '{"type":"deleteNode","nodeId":"node_verify"}',
+      },
+    ])
+  })
+
+  it('lists realtime voice events that matter for speech debugging', () => {
+    const table = vi.spyOn(console, 'table').mockImplementation(() => undefined)
+    vi.spyOn(console, 'groupCollapsed').mockImplementation(() => undefined)
+    vi.spyOn(console, 'groupEnd').mockImplementation(() => undefined)
+
+    debugRealtimeEvent({
+      type: 'input_audio_transcription.completed',
+      transcript: 'add payment step',
     })
+
+    expect(console.groupCollapsed).toHaveBeenCalledWith('[VoiceCanvas] realtime voice event')
+    expect(table).toHaveBeenCalledWith([
+      {
+        type: 'input_audio_transcription.completed',
+        transcript: 'add payment step',
+        command: '',
+        error: '',
+      },
+    ])
+  })
+
+  it('lists realtime tool calls with the command args', () => {
+    const table = vi.spyOn(console, 'table').mockImplementation(() => undefined)
+    vi.spyOn(console, 'groupCollapsed').mockImplementation(() => undefined)
+    vi.spyOn(console, 'groupEnd').mockImplementation(() => undefined)
+
+    debugVoiceToolCall('started', {
+      callId: 'call_1',
+      name: 'apply_voice_command',
+      args: { command: 'delete Mermaid rendering' },
+    })
+
+    expect(table).toHaveBeenCalledWith([
+      {
+        phase: 'started',
+        callId: 'call_1',
+        name: 'apply_voice_command',
+        command: 'delete Mermaid rendering',
+        args: '{"command":"delete Mermaid rendering"}',
+        output: '',
+        error: '',
+      },
+    ])
   })
 })
 
@@ -52,6 +130,7 @@ function emptyCanvas() {
     id: 'canvas_default',
     title: 'Untitled flow',
     diagramType: 'flowchart' as const,
+    mermaidSource: '',
     nodes: [],
     edges: [],
     viewport: { x: 0, y: 0, zoom: 1 },

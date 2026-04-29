@@ -32,6 +32,11 @@ const patchOpSchema = z.discriminatedUnion('type', [
     scope: z.enum(['local', 'subtree']),
     rootNodeId: z.string(),
   }),
+  z.object({
+    type: z.literal('setMermaidSource'),
+    diagramType: z.string(),
+    source: z.string(),
+  }),
 ])
 
 export const patchDraftSchema = z.object({
@@ -82,6 +87,8 @@ export async function compilePatchWithModel(config: ModelPatchCompilerConfig, in
     system: [
       'You are the VoiceCanvas Patch compiler.',
       'Return only a structured Patch draft.',
+      'For non-flowchart diagrams, use setMermaidSource with valid Mermaid source.',
+      'When canvas.mermaidSource is present and the command deletes or renames visible text, edit that Mermaid source with setMermaidSource instead of using node ops.',
       'Never rewrite the whole graph when a local edit is enough.',
       'Use needs_confirm with targetCandidates when the target is ambiguous.',
     ].join('\n'),

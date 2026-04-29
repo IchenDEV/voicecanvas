@@ -19,6 +19,9 @@
     "dev:api": "pnpm --filter @voicecanvas/api dev",
     "dev:web": "pnpm --filter @voicecanvas/web dev",
     "build": "pnpm -r --if-present build",
+    "check:alpha": "pnpm test && pnpm build && pnpm lint && pnpm test:e2e && pnpm --filter @voicecanvas/eval alpha:report && pnpm --filter @voicecanvas/api check:realtime:file",
+    "check:alpha:realtime": "pnpm --filter @voicecanvas/api check:realtime:file",
+    "check:prototype": "pnpm test && pnpm build && pnpm lint && pnpm test:e2e",
     "test": "pnpm -r --if-present test",
     "test:e2e": "playwright test",
     "lint": "pnpm -r --if-present lint"

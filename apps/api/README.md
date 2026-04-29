@@ -18,7 +18,7 @@ http://localhost:8787
 
 - Command endpoints for text segments and patch execution.
 - In-memory `CanvasDoc` workspace state for the prototype.
-- Doubao realtime ASR WebSocket proxy.
+- OpenAI Realtime session proxy.
 - JSON export.
 
 ## Test

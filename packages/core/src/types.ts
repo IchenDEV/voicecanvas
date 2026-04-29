@@ -1,4 +1,4 @@
-export type DiagramType = 'flowchart' | 'mindmap'
+export type DiagramType = string
 
 export type NodeType = 'start' | 'process' | 'decision' | 'end' | 'note'
 
@@ -8,7 +8,7 @@ export type PatchStatus = 'draft' | 'needs_confirm' | 'applied' | 'failed' | 'ro
 
 export type VoiceProviderName =
   | 'text-sim'
-  | 'doubao-asr'
+  | 'openai-realtime'
 
 export type GraphPoint = {
   x: number
@@ -40,11 +40,18 @@ export type CanvasDoc = {
   id: string
   title: string
   diagramType: DiagramType
+  mermaidSource: string
   nodes: GraphNode[]
   edges: GraphEdge[]
   viewport: ViewportState
   version: number
   appliedPatchIds: string[]
+}
+
+export type WorkspaceSnapshot = {
+  canvas: CanvasDoc
+  history: Patch[]
+  pendingPatch: Patch | null
 }
 
 export type TargetCandidate = {
@@ -65,7 +72,9 @@ export type PatchOp =
   | { type: 'deleteNode'; nodeId: string }
   | { type: 'addEdge'; edge: GraphEdge }
   | { type: 'deleteEdge'; edgeId: string }
+  | { type: 'moveNode'; nodeId: string; position: GraphPoint }
   | { type: 'changeLayout'; scope: 'local' | 'subtree'; rootNodeId: string }
+  | { type: 'setMermaidSource'; diagramType: DiagramType; source: string }
 
 export type Patch = {
   id: string
@@ -116,6 +125,7 @@ export function createEmptyCanvasDoc(): CanvasDoc {
     id: 'canvas_default',
     title: 'Untitled flow',
     diagramType: 'flowchart',
+    mermaidSource: '',
     nodes: [],
     edges: [],
     viewport: { x: 0, y: 0, zoom: 1 },

@@ -36,5 +36,9 @@ export function isAmbiguous(text: string, selectedObjectIds: string[]): boolean 
   if (selectedObjectIds.length > 0) {
     return false
   }
+  return hasAmbiguousReference(text)
+}
+
+export function hasAmbiguousReference(text: string): boolean {
   return /\b(here|that|this branch|there)\b|这里|那个|这一支|这条/.test(text.toLowerCase())
 }

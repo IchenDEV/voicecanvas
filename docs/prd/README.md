@@ -1,6 +1,6 @@
 # VoiceCanvas Product Docs
 
-These documents describe the product direction, interaction model, system design, and first engineering phase for VoiceCanvas.
+These documents describe the current product direction, interaction model, and system design for VoiceCanvas.
 
 ## Documents
 
@@ -12,9 +12,6 @@ These documents describe the product direction, interaction model, system design
 6. [Interface design](06-interface-design.md)
 7. [System architecture](07-system-architecture.md)
 8. [Go-to-market](08-go-to-market.md)
-9. [Implementation plan](09-implementation-plan.md)
-10. [Engineering plan](10-engineering-plan.md)
-
 ## Design References
 
 - [Workbench](design/imagegen/01-workbench-arc-framer.png)

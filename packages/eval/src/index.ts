@@ -10,6 +10,7 @@ export type EvalMetrics = {
 }
 
 export * from './acceptance-cases'
+export * from './alpha-report'
 
 export type EvalSampleResult = {
   patchExecutable: boolean

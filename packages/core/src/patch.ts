@@ -53,8 +53,23 @@ export function applyPatch(canvas: CanvasDoc, patch: Patch): PatchApplyResult {
       continue
     }
 
+    if (op.type === 'moveNode') {
+      next.nodes = next.nodes.map((node) =>
+        node.id === op.nodeId ? { ...node, position: { ...op.position } } : node,
+      )
+      continue
+    }
+
     if (op.type === 'changeLayout') {
       next.nodes = layoutLocal(next.nodes, op.rootNodeId)
+      continue
+    }
+
+    if (op.type === 'setMermaidSource') {
+      next.diagramType = op.diagramType
+      next.mermaidSource = op.source
+      next.nodes = []
+      next.edges = []
     }
   }
 
@@ -95,6 +110,7 @@ export function rollbackPatch(current: CanvasDoc, patch: Patch): CanvasDoc {
 export function cloneCanvas(canvas: CanvasDoc): CanvasDoc {
   return {
     ...canvas,
+    mermaidSource: canvas.mermaidSource,
     nodes: canvas.nodes.map((node) => ({ ...node, position: { ...node.position } })),
     edges: canvas.edges.map((edge) => ({ ...edge })),
     viewport: { ...canvas.viewport },

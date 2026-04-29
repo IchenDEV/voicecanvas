@@ -11,7 +11,7 @@ describe('VoiceCanvas acceptance cases', () => {
       'api-ambiguous-here-candidates',
       'api-undo-restores-previous-version',
       'web-no-submit-continuous-flow',
-      'realtime-doubao-provider-only',
+      'realtime-openai-voice-component',
     ])
   })
 

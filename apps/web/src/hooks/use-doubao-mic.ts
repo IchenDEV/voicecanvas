@@ -65,9 +65,9 @@ export function useDoubaoMic({ onTranscript, setStatus }: DoubaoMicOptions) {
     try {
       const provider = await withTimeout(fetchRealtimeProvider(), 8_000, 'Realtime provider timed out.')
       const stream = await getUserMediaWithTimeout()
+      mediaStreamRef.current = stream
       setStatus('Connecting ASR')
       const socket = await startDoubaoRealtimeMic({ provider, refs, stream, setStatus, handleRealtimeEvent })
-      mediaStreamRef.current = stream
       doubaoSocketRef.current = socket
       setIsRealtimeActive(true)
       setStatus('Listening')

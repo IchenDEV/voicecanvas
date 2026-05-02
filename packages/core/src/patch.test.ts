@@ -132,4 +132,29 @@ describe('VoiceCanvas core patch engine', () => {
     expect(source).toBe('flowchart TD')
     expect(source).not.toContain('Start speaking to grow the graph')
   })
+
+  it('keeps Mermaid node ids unique after id normalization', () => {
+    const source = canvasToMermaid({
+      ...createEmptyCanvasDoc(),
+      nodes: [
+        { id: 'a-b', type: 'process', label: 'A', position: { x: 0, y: 0 } },
+        { id: 'a_b', type: 'process', label: 'B', position: { x: 0, y: 120 } },
+      ],
+      edges: [{ id: 'edge_1', source: 'a-b', target: 'a_b', kind: 'default' }],
+    })
+
+    expect(source).toContain('a_b["A"]')
+    expect(source).toContain('a_b_2["B"]')
+    expect(source).toContain('a_b --> a_b_2')
+  })
+
+  it('escapes Mermaid labels before rendering them as SVG HTML', () => {
+    const source = canvasToMermaid({
+      ...createEmptyCanvasDoc(),
+      nodes: [{ id: 'node_1', type: 'process', label: 'Say "hi" <script>', position: { x: 0, y: 0 } }],
+    })
+
+    expect(source).toContain('Say \\"hi\\" &lt;script&gt;')
+    expect(source).not.toContain('<script>')
+  })
 })

@@ -1,13 +1,14 @@
 {
   "name": "@voicecanvas/api",
   "version": "0.0.0",
-  "description": "Hono API and Doubao ASR bridge for VoiceCanvas.",
+  "description": "Hono API and OpenAI Realtime session proxy for VoiceCanvas.",
   "private": true,
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=../../.env --import tsx --watch src/index.ts",
     "build": "tsc -p tsconfig.json",
+    "check:realtime:file": "vitest run src/app-realtime.test.ts",
     "start": "node --env-file-if-exists=../../.env --import tsx src/index.ts",
     "test": "vitest run"
   },
@@ -16,12 +17,10 @@
     "@voicecanvas/ai": "workspace:*",
     "@voicecanvas/core": "workspace:*",
     "hono": "^4.12.14",
-    "ws": "^8.20.0",
     "zod": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
-    "@types/ws": "^8.18.1",
     "tsx": "^4.21.0",
     "typescript": "~6.0.2",
     "vitest": "^4.0.15"

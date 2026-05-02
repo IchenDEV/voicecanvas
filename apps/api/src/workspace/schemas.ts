@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Patch } from '@voicecanvas/core'
+import type { CanvasDoc, Patch } from '@voicecanvas/core'
 
 const nodeTypeSchema = z.enum(['start', 'process', 'decision', 'end', 'note'])
 const edgeKindSchema = z.enum(['default', 'success', 'failure'])
@@ -28,7 +28,8 @@ const graphEdgeSchema = z.object({
 const canvasDocSchema = z.object({
   id: z.string().min(1),
   title: z.string(),
-  diagramType: z.enum(['flowchart', 'mindmap']),
+  diagramType: z.string().min(1),
+  mermaidSource: z.string(),
   nodes: z.array(graphNodeSchema),
   edges: z.array(graphEdgeSchema),
   viewport: z.object({
@@ -38,7 +39,7 @@ const canvasDocSchema = z.object({
   }),
   version: z.number(),
   appliedPatchIds: z.array(z.string()),
-})
+}) satisfies z.ZodType<CanvasDoc>
 
 const patchOpSchema = z.discriminatedUnion('type', [
   z.object({
@@ -64,9 +65,19 @@ const patchOpSchema = z.discriminatedUnion('type', [
     edgeId: z.string().min(1),
   }),
   z.object({
+    type: z.literal('moveNode'),
+    nodeId: z.string().min(1),
+    position: graphPointSchema,
+  }),
+  z.object({
     type: z.literal('changeLayout'),
     scope: z.enum(['local', 'subtree']),
     rootNodeId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('setMermaidSource'),
+    diagramType: z.string().min(1),
+    source: z.string().min(1),
   }),
 ])
 
@@ -97,6 +108,7 @@ const patchSchema = z.object({
 export const textSegmentRequestSchema = z.object({
   text: z.string().min(1),
   selectedObjectIds: z.array(z.string()).optional().default([]),
+  provider: z.enum(['text-sim', 'openai-realtime']).optional().default('text-sim'),
 })
 
 export const patchApplyRequestSchema = z.object({
@@ -105,4 +117,10 @@ export const patchApplyRequestSchema = z.object({
 
 export const patchConfirmRequestSchema = z.object({
   candidateId: z.string().min(1),
+})
+
+export const workspaceLoadRequestSchema = z.object({
+  canvas: canvasDocSchema,
+  history: z.array(patchSchema).default([]),
+  pendingPatch: patchSchema.nullable().default(null),
 })

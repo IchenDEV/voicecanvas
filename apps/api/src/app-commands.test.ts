@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Patch, VoiceSegment } from '@voicecanvas/core'
+import { createEmptyCanvasDoc, type Patch, type VoiceSegment } from '@voicecanvas/core'
 import { createApp } from './app'
 import { postJson } from './test-helpers'
 
@@ -33,6 +33,26 @@ describe('VoiceCanvas command API', () => {
       'Compiled: first step',
       'Compiled: second step',
     ])
+  })
+
+  it('keeps OpenAI Realtime as the segment provider for spoken commands', async () => {
+    let provider = ''
+    const app = createApp({
+      patchCompiler: async ({ segment }) => {
+        provider = segment.provider
+        return patchWithNode(segment, 'Compiled voice command')
+      },
+    })
+
+    const response = await postJson(app, '/api/commands/text-segment', {
+      text: 'delete Mermaid rendering',
+      provider: 'openai-realtime',
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(provider).toBe('openai-realtime')
+    expect(payload.results[0].segment.provider).toBe('openai-realtime')
   })
 
   it('processes continuous text segments into ordered patch history', async () => {
@@ -69,6 +89,42 @@ describe('VoiceCanvas command API', () => {
     expect(confirmed.canvas.nodes.some((node: { label: string }) => node.label === 'New step')).toBe(true)
   })
 
+  it('confirms a pending patch from spoken ordinal text', async () => {
+    const app = createApp()
+    await postJson(app, '/api/commands/text-segment', { text: 'create signup flow...' })
+    const ambiguousResponse = await postJson(app, '/api/commands/text-segment', { text: 'add a step here...' })
+    const ambiguous = await ambiguousResponse.json()
+    const secondCandidateId = ambiguous.pendingPatch.targetCandidates[1].id
+
+    const confirmedResponse = await postJson(app, '/api/commands/text-segment', { text: 'the second one' })
+    const confirmed = await confirmedResponse.json()
+
+    expect(confirmedResponse.status).toBe(200)
+    expect(confirmed.status).toBe('applied')
+    expect(confirmed.pendingPatch).toBeNull()
+    expect(confirmed.patch.ops.some((op: { type: string; afterNodeId?: string }) => op.afterNodeId === secondCandidateId)).toBe(
+      true,
+    )
+  })
+
+  it('uses selected object ids to apply an ambiguous local edit without confirmation', async () => {
+    const app = createApp()
+    await postJson(app, '/api/commands/text-segment', { text: 'create signup flow...' })
+
+    const response = await postJson(app, '/api/commands/text-segment', {
+      text: 'add a step here...',
+      selectedObjectIds: ['node_phone'],
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload.status).toBe('applied')
+    expect(payload.pendingPatch).toBeNull()
+    expect(payload.patch.ops.some((op: { type: string; afterNodeId?: string }) => op.afterNodeId === 'node_phone')).toBe(
+      true,
+    )
+  })
+
   it('undoes the last patch and restores the previous canvas version', async () => {
     const app = createApp()
     await postJson(app, '/api/commands/text-segment', {
@@ -96,6 +152,42 @@ describe('VoiceCanvas command API', () => {
     expect(reset.canvas.nodes).toHaveLength(0)
     expect(reset.history).toHaveLength(0)
     expect(reset.pendingPatch).toBeNull()
+  })
+
+  it('loads a browser-stored workspace before compiling the next command', async () => {
+    let compiledCanvasId = ''
+    const app = createApp({
+      patchCompiler: ({ canvas, segment }) => {
+        compiledCanvasId = canvas.id
+        return patchWithNode(segment, 'Compiled from stored canvas')
+      },
+    })
+    const storedCanvas = {
+      ...createEmptyCanvasDoc(),
+      id: 'diagram_saved',
+      title: 'Saved launch plan',
+      diagramType: 'mindmap',
+      mermaidSource: 'mindmap\n  root((Saved launch plan))',
+      version: 3,
+    }
+
+    const loadResponse = await postJson(app, '/api/workspace/load', {
+      canvas: storedCanvas,
+      history: [],
+      pendingPatch: null,
+    })
+    const loaded = await loadResponse.json()
+
+    expect(loadResponse.status).toBe(200)
+    expect(loaded.status).toBe('loaded')
+    expect(loaded.canvas.id).toBe('diagram_saved')
+
+    const commandResponse = await postJson(app, '/api/commands/text-segment', { text: 'add launch review' })
+    const command = await commandResponse.json()
+
+    expect(commandResponse.status).toBe(200)
+    expect(compiledCanvasId).toBe('diagram_saved')
+    expect(command.canvas.nodes.some((node: { label: string }) => node.label === 'Compiled from stored canvas')).toBe(true)
   })
 
   it('rejects malformed JSON request bodies without throwing a server error', async () => {

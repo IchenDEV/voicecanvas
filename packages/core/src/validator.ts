@@ -44,6 +44,11 @@ export function validatePatchDraft(patch: Patch): ValidationResult {
   if (patch.ops.length === 0) {
     return { ok: false, reason: 'Patch must include at least one operation.' }
   }
+  for (const op of patch.ops) {
+    if (op.type === 'setMermaidSource' && !op.source.trim()) {
+      return { ok: false, reason: 'Mermaid source cannot be empty.' }
+    }
+  }
   return { ok: true }
 }
 

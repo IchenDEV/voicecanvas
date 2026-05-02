@@ -4,7 +4,7 @@
   top: 18px;
   left: 50%;
   display: grid;
-  width: min(760px, calc(100vw - 32px));
+  width: min(960px, calc(100vw - 32px));
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 14px;
@@ -17,11 +17,24 @@
   transform: translateX(-50%);
 }
 
+.command-left {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
 .brand-lockup {
   gap: 9px;
   padding-left: 6px;
   font-size: 13px;
   font-weight: 650;
+}
+
+.command-brand {
+  justify-self: center;
+  padding-left: 0;
 }
 
 .brand-mark {
@@ -32,11 +45,165 @@
   object-fit: contain;
 }
 
-.command-status {
+.file-library {
+  position: relative;
+  min-width: 0;
+}
+
+.file-menu-trigger {
+  display: grid;
+  grid-template-columns: 16px minmax(96px, 170px) 14px;
+  align-items: center;
   gap: 7px;
-  color: #4c4c4c;
-  font-size: 13px;
+  height: 32px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid rgba(25, 25, 25, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #151515;
+  cursor: pointer;
+}
+
+.file-menu-trigger span {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 640;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.file-menu-trigger:hover,
+.file-menu-trigger:focus-visible {
+  background: #fff;
+}
+
+.file-menu-panel {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  display: grid;
+  width: min(360px, calc(100vw - 44px));
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(25, 25, 25, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 70px rgba(25, 25, 25, 0.16);
+  backdrop-filter: blur(20px);
+}
+
+.file-menu-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.file-rename-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  overflow: hidden;
+  border: 1px solid rgba(25, 25, 25, 0.1);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.file-rename-form input {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: #151515;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.file-rename-form button,
+.file-new-button,
+.file-delete-button {
+  border: 0;
+  background: transparent;
+  color: #151515;
+  cursor: pointer;
+}
+
+.file-rename-form button {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid rgba(25, 25, 25, 0.08);
+}
+
+.file-new-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid rgba(25, 25, 25, 0.1);
+  border-radius: 8px;
+  background: #151515;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.file-list {
+  display: grid;
+  gap: 6px;
+  max-height: min(340px, calc(100vh - 172px));
+  overflow: auto;
+}
+
+.file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: center;
+  border: 1px solid rgba(25, 25, 25, 0.07);
+  border-radius: 8px;
+  background: rgba(248, 247, 244, 0.86);
+}
+
+.file-row.is-active {
+  border-color: rgba(34, 111, 84, 0.36);
+  background: rgba(236, 247, 242, 0.94);
+}
+
+.file-open-button {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  color: #151515;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-open-button span {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-open-button small {
+  color: #777;
+  font-size: 11px;
+}
+
+.file-delete-button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #777;
+}
+
+.file-delete-button:hover,
+.file-delete-button:focus-visible {
+  color: #d6422b;
 }
 
 .command-actions {

@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "@voicecanvas/core": "workspace:*",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.561.0",
     "mermaid": "^11.12.2",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "realtime-voice-component": "git+https://github.com/openai/realtime-voice-component.git#332285bf41f321353b63ad6d79ac2cab0059a13a",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

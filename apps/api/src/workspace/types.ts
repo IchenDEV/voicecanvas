@@ -10,9 +10,8 @@ export type PatchCompilerInput = {
 export type PatchCompiler = (input: PatchCompilerInput) => Patch | Promise<Patch>
 
 export type CreateAppOptions = {
-  doubaoAPIKey?: string
-  doubaoAsrModel?: string
-  doubaoAsrResourceId?: string
+  openaiAPIKey?: string
+  openaiRealtimeModel?: string
   modelPatchCompiler?: Partial<ModelPatchCompilerConfig>
   patchCompiler?: PatchCompiler
 }

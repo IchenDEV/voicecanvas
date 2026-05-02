@@ -1,16 +1,20 @@
-import { basePatch, isAmbiguous } from './mock-patch-helpers'
+import { basePatch, hasAmbiguousReference, isAmbiguous } from './mock-patch-helpers'
 import {
   createFailureBackPatch,
+  createMermaidSourcePatch,
   createNeedsConfirmPatch,
   createOtpPatch,
+  createStepAfterSelectedPatch,
   createSignupFlowPatch,
 } from './mock-patch-builders'
+import { createMermaidSourceFromIntent, detectMermaidSource } from './mermaid-source'
 import {
   createDeleteNodePatch,
   createUpdateNodePatch,
   isDeleteIntent,
   isUpdateIntent,
 } from './mock-edit-compiler'
+import { createMermaidSourceEditPatch } from './mermaid-source-editor'
 import type { CanvasDoc, Patch, VoiceSegment } from './types'
 
 type CompileOptions = {
@@ -22,6 +26,27 @@ type CompileOptions = {
 export function compileMockPatch({ segment, canvas, selectedObjectIds = [] }: CompileOptions): Patch {
   const text = segment.finalTranscript.trim()
   const normalized = text.toLowerCase()
+  const directMermaidSource = detectMermaidSource(text)
+  const intendedMermaidSource = createMermaidSourceFromIntent(text)
+
+  if (directMermaidSource) {
+    return createMermaidSourcePatch(text, segment.id, directMermaidSource.diagramType, directMermaidSource.source)
+  }
+
+  if (intendedMermaidSource && (canvas.nodes.length === 0 || normalized.includes('create') || text.includes('画'))) {
+    return createMermaidSourcePatch(text, segment.id, intendedMermaidSource.diagramType, intendedMermaidSource.source)
+  }
+
+  if (canvas.mermaidSource.trim() && (isDeleteIntent(normalized) || isUpdateIntent(normalized))) {
+    const editPatch = createMermaidSourceEditPatch(text, segment.id, canvas)
+    if (editPatch) {
+      return editPatch
+    }
+  }
+
+  if (hasAmbiguousReference(text) && selectedObjectIds.length > 0) {
+    return createStepAfterSelectedPatch(text, segment.id, canvas, selectedObjectIds)
+  }
 
   if (isAmbiguous(text, selectedObjectIds)) {
     return createNeedsConfirmPatch(text, segment.id, canvas, selectedObjectIds)

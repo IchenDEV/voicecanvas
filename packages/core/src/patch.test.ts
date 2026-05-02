@@ -4,7 +4,9 @@ import {
   canvasToMermaid,
   compileMockPatch,
   createEmptyCanvasDoc,
+  createDiagramTemplatePatch,
   createTextSegment,
+  diagramTemplates,
   resolvePendingPatch,
   rollbackPatch,
 } from './index'
@@ -63,6 +65,52 @@ describe('VoiceCanvas core patch engine', () => {
 
     expect(rolledBack.nodes).toHaveLength(first.canvas.nodes.length)
     expect(rolledBack.appliedPatchIds).toEqual(first.canvas.appliedPatchIds)
+  })
+
+  it('moves a node through a patch and rolls back its position', () => {
+    const first = applyOrThrow(
+      createEmptyCanvasDoc(),
+      compileMockPatch({ canvas: createEmptyCanvasDoc(), segment: createTextSegment('create signup flow') }),
+    )
+    const original = first.canvas.nodes.find((node) => node.id === 'node_phone')
+    expect(original).toBeDefined()
+
+    const moved = applyOrThrow(first.canvas, {
+      id: 'patch_move_phone',
+      sourceSegmentIds: ['segment_drag'],
+      sourceText: 'drag phone step',
+      ops: [{ type: 'moveNode', nodeId: 'node_phone', position: { x: 420, y: 260 } }],
+      targetCandidates: [],
+      confidence: 1,
+      status: 'draft',
+      createdAt: Date.now(),
+    })
+
+    expect(moved.canvas.nodes.find((node) => node.id === 'node_phone')?.position).toEqual({ x: 420, y: 260 })
+    expect(moved.patch.rollback?.before.nodes.find((node) => node.id === 'node_phone')?.position).toEqual(
+      original?.position,
+    )
+    expect(rollbackPatch(moved.canvas, moved.patch).nodes.find((node) => node.id === 'node_phone')?.position).toEqual(
+      original?.position,
+    )
+  })
+
+  it('uses a selected object as the target for an ambiguous local add command', () => {
+    const first = applyOrThrow(
+      createEmptyCanvasDoc(),
+      compileMockPatch({ canvas: createEmptyCanvasDoc(), segment: createTextSegment('create signup flow') }),
+    )
+    const patch = compileMockPatch({
+      canvas: first.canvas,
+      segment: createTextSegment('add a step here'),
+      selectedObjectIds: ['node_phone'],
+    })
+    const result = applyOrThrow(first.canvas, patch)
+
+    expect(patch.status).toBe('draft')
+    expect(patch.targetCandidates).toHaveLength(0)
+    expect(result.canvas.edges.some((edge) => edge.source === 'node_phone')).toBe(true)
+    expect(result.canvas.nodes.some((node) => node.label === 'New step')).toBe(true)
   })
 
   it('does not mutate the canvas when a patch contains an invalid edge', () => {
@@ -124,6 +172,62 @@ describe('VoiceCanvas core patch engine', () => {
 
     expect(canvasToMermaid(result.canvas)).toContain('flowchart TD')
     expect(canvasToMermaid(result.canvas)).toContain('Enter phone number')
+  })
+
+  it('creates a Mermaid-native mindmap from a blank canvas', () => {
+    const canvas = createEmptyCanvasDoc()
+    const patch = compileMockPatch({
+      canvas,
+      segment: createTextSegment('create a mindmap about VoiceCanvas'),
+    })
+    const result = applyOrThrow(canvas, patch)
+
+    expect(result.canvas.diagramType).toBe('mindmap')
+    expect(result.canvas.nodes).toHaveLength(0)
+    expect(canvasToMermaid(result.canvas)).toContain('mindmap')
+    expect(canvasToMermaid(result.canvas)).toContain('VoiceCanvas')
+  })
+
+  it('uses pasted Mermaid source for any Mermaid diagram type', () => {
+    const canvas = createEmptyCanvasDoc()
+    const patch = compileMockPatch({
+      canvas,
+      segment: createTextSegment('sequenceDiagram\n  Alice->>Bob: Hello'),
+    })
+    const result = applyOrThrow(canvas, patch)
+
+    expect(result.canvas.diagramType).toBe('sequenceDiagram')
+    expect(canvasToMermaid(result.canvas)).toBe('sequenceDiagram\n  Alice->>Bob: Hello')
+  })
+
+  it('creates Mermaid source patches from starter templates', () => {
+    const template = diagramTemplates.find((candidate) => candidate.id === 'ideas')
+    expect(template?.title).toBe('Ideas and structure')
+
+    const patch = createDiagramTemplatePatch('ideas')
+    expect(patch.ops).toEqual([
+      {
+        type: 'setMermaidSource',
+        diagramType: 'mindmap',
+        source: expect.stringContaining('Speech input'),
+      },
+    ])
+
+    const result = applyOrThrow(createEmptyCanvasDoc(), patch)
+    expect(canvasToMermaid(result.canvas)).toContain('mindmap')
+    expect(canvasToMermaid(result.canvas)).toContain('Mermaid rendering')
+  })
+
+  it('can mark candidate nodes in Mermaid output without changing the default output', () => {
+    const canvas = createEmptyCanvasDoc()
+    const result = applyOrThrow(canvas, compileMockPatch({ canvas, segment: createTextSegment('create signup flow') }))
+    const baseline = canvasToMermaid(result.canvas)
+    const highlighted = canvasToMermaid(result.canvas, { highlightNodeIds: ['node_phone'] })
+
+    expect(canvasToMermaid(result.canvas)).toBe(baseline)
+    expect(highlighted).toContain('classDef voicecanvasCandidate')
+    expect(highlighted).toContain('class node_phone voicecanvasCandidate')
+    expect(highlighted).not.toBe(baseline)
   })
 
   it('keeps empty canvas UI copy out of Mermaid output', () => {

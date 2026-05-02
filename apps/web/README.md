@@ -14,7 +14,7 @@ Default URL:
 http://localhost:5173
 ```
 
-The Vite dev server proxies `/api` and realtime WebSocket traffic to the API server on port `8787`.
+The Vite dev server proxies `/api` traffic to the API server on port `8787`.
 
 ## Main Responsibilities
 

@@ -18,6 +18,26 @@ export function resolvePendingPatch(patch: Patch, candidateId: string): Patch {
   }
 }
 
+export function createStepAfterSelectedPatch(
+  sourceText: string,
+  segmentId: string,
+  canvas: CanvasDoc,
+  selectedObjectIds: string[],
+): Patch {
+  const targetId = selectedObjectIds.find((id) => canvas.nodes.some((node) => node.id === id))
+  if (!targetId) {
+    return basePatch(sourceText, segmentId, [])
+  }
+  return resolvePendingPatch(
+    {
+      ...basePatch(sourceText, segmentId, []),
+      status: 'needs_confirm',
+      targetCandidates: [],
+    },
+    targetId,
+  )
+}
+
 export function createSignupFlowPatch(sourceText: string, segmentId: string): Patch {
   const start = node('node_start', 'start', 'Visitor opens signup', 0)
   const phone = node('node_phone', 'process', 'Enter phone number', 1)
@@ -36,6 +56,15 @@ export function createSignupFlowPatch(sourceText: string, segmentId: string): Pa
     { type: 'addEdge', edge: { id: 'edge_verify_account', source: verify.id, target: account.id, kind: 'default' } },
     { type: 'addEdge', edge: { id: 'edge_account_done', source: account.id, target: done.id, kind: 'success' } },
   ])
+}
+
+export function createMermaidSourcePatch(
+  sourceText: string,
+  segmentId: string,
+  diagramType: string,
+  source: string,
+): Patch {
+  return basePatch(sourceText, segmentId, [{ type: 'setMermaidSource', diagramType, source }])
 }
 
 export function createOtpPatch(sourceText: string, segmentId: string, canvas: CanvasDoc): Patch {

@@ -189,6 +189,33 @@ describe('VoiceCanvas command API', () => {
     expect(compiledCanvasId).toBe('diagram_saved')
     expect(command.canvas.nodes.some((node: { label: string }) => node.label === 'Compiled from stored canvas')).toBe(true)
   })
+
+  it('rejects malformed JSON request bodies without throwing a server error', async () => {
+    const app = createApp()
+    const response = await app.request('/api/commands/text-segment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{bad json',
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.error).toBe('Invalid JSON body.')
+  })
+
+  it('rejects invalid patch payloads before the patch engine runs', async () => {
+    const app = createApp()
+    const response = await postJson(app, '/api/patch/apply', {
+      patch: {
+        id: 'patch_missing_ops',
+        status: 'draft',
+      },
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(payload.error.fieldErrors.patch).toBeTruthy()
+  })
 })
 
 function patchWithNode(segment: VoiceSegment, label: string): Patch {

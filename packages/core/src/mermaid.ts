@@ -14,9 +14,12 @@ export function canvasToMermaid(canvas: CanvasDoc, options: MermaidExportOptions
     return 'flowchart TD'
   }
 
-  const nodeLines = canvas.nodes.map((node) => `  ${safeId(node.id)}${shapeForNode(node)}`)
-  const edgeLines = canvas.edges.map((edge) => `  ${safeId(edge.source)} ${arrowForEdge(edge)} ${safeId(edge.target)}`)
-  const highlightLines = candidateHighlightLines(options.highlightNodeIds ?? [])
+  const idMap = createMermaidIdMap(canvas.nodes)
+  const nodeLines = canvas.nodes.map((node) => `  ${idMap.get(node.id) ?? safeId(node.id)}${shapeForNode(node)}`)
+  const edgeLines = canvas.edges.map(
+    (edge) => `  ${idMap.get(edge.source) ?? safeId(edge.source)} ${arrowForEdge(edge)} ${idMap.get(edge.target) ?? safeId(edge.target)}`,
+  )
+  const highlightLines = candidateHighlightLines((options.highlightNodeIds ?? []).map((id) => idMap.get(id) ?? id))
 
   return ['flowchart TD', ...nodeLines, ...edgeLines, ...highlightLines].join('\n')
 }
@@ -47,11 +50,35 @@ function arrowForEdge(edge: GraphEdge): string {
 }
 
 function safeId(id: string): string {
-  return id.replace(/[^a-zA-Z0-9_]/g, '_')
+  return id.replace(/[^a-zA-Z0-9_]/g, '_') || 'node'
 }
 
 function escapeLabel(label: string): string {
-  return label.replace(/"/g, '\\"')
+  return label
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function createMermaidIdMap(nodes: GraphNode[]): Map<string, string> {
+  const used = new Set<string>()
+  const map = new Map<string, string>()
+
+  for (const node of nodes) {
+    const base = safeId(node.id)
+    let candidate = base
+    let suffix = 2
+    while (used.has(candidate)) {
+      candidate = `${base}_${suffix}`
+      suffix += 1
+    }
+    used.add(candidate)
+    map.set(node.id, candidate)
+  }
+
+  return map
 }
 
 function candidateHighlightLines(nodeIds: string[]): string[] {

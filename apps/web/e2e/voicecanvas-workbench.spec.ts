@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const apiBaseURL = process.env.PLAYWRIGHT_API_URL ?? 'http://localhost:8787'
+const apiBaseURL = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:8787'
 const apiUrl = (path: string) => `${apiBaseURL}${path}`
 
 test.beforeEach(async ({ page, request }) => {

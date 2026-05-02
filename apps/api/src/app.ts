@@ -1,5 +1,6 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { cors } from 'hono/cors'
+import type { z } from 'zod'
 import {
   patchApplyRequestSchema,
   patchConfirmRequestSchema,
@@ -23,9 +24,9 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get('/health', (c) => c.json({ ok: true }))
   app.get('/api/canvas', (c) => c.json(store.snapshot()))
   app.post('/api/workspace/load', async (c) => {
-    const parsed = workspaceLoadRequestSchema.safeParse(await c.req.json())
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400)
+    const parsed = await parseJsonBody(c, workspaceLoadRequestSchema)
+    if (!parsed.ok) {
+      return parsed.response
     }
 
     return c.json(store.loadSnapshot(parsed.data))
@@ -47,9 +48,9 @@ export function createApp(options: CreateAppOptions = {}) {
   app.post('/api/dev/reset', (c) => c.json(store.reset()))
 
   app.post('/api/commands/text-segment', async (c) => {
-    const parsed = textSegmentRequestSchema.safeParse(await c.req.json())
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400)
+    const parsed = await parseJsonBody(c, textSegmentRequestSchema)
+    if (!parsed.ok) {
+      return parsed.response
     }
 
     const result = await store.processTextInput(parsed.data.text, parsed.data.selectedObjectIds, parsed.data.provider)
@@ -60,18 +61,18 @@ export function createApp(options: CreateAppOptions = {}) {
   })
 
   app.post('/api/patch/compile', async (c) => {
-    const parsed = textSegmentRequestSchema.safeParse(await c.req.json())
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400)
+    const parsed = await parseJsonBody(c, textSegmentRequestSchema)
+    if (!parsed.ok) {
+      return parsed.response
     }
 
     return c.json(await store.compileOnly(parsed.data.text, parsed.data.selectedObjectIds, parsed.data.provider))
   })
 
   app.post('/api/patch/apply', async (c) => {
-    const parsed = patchApplyRequestSchema.safeParse(await c.req.json())
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400)
+    const parsed = await parseJsonBody(c, patchApplyRequestSchema)
+    if (!parsed.ok) {
+      return parsed.response
     }
 
     const result = store.applyDraft(parsed.data.patch)
@@ -79,9 +80,9 @@ export function createApp(options: CreateAppOptions = {}) {
   })
 
   app.post('/api/patch/confirm', async (c) => {
-    const parsed = patchConfirmRequestSchema.safeParse(await c.req.json())
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400)
+    const parsed = await parseJsonBody(c, patchConfirmRequestSchema)
+    if (!parsed.ok) {
+      return parsed.response
     }
 
     const result = store.confirm(parsed.data.candidateId)
@@ -96,4 +97,20 @@ export function createApp(options: CreateAppOptions = {}) {
   })
 
   return app
+}
+
+async function parseJsonBody<T>(c: Context, schema: z.ZodType<T>) {
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return { ok: false as const, response: c.json({ error: 'Invalid JSON body.' }, 400) }
+  }
+
+  const parsed = schema.safeParse(body)
+  if (!parsed.success) {
+    return { ok: false as const, response: c.json({ error: parsed.error.flatten() }, 400) }
+  }
+
+  return { ok: true as const, data: parsed.data }
 }

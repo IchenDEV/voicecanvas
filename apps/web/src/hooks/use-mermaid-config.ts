@@ -5,7 +5,7 @@ export function useMermaidConfig() {
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
-      securityLevel: 'loose',
+      securityLevel: 'strict',
       theme: 'base',
       themeVariables: {
         primaryColor: '#ffffff',

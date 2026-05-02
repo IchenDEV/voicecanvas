@@ -44,7 +44,6 @@ export function installDoubaoRealtimeProxy(server: UpgradeServer, options: Douba
           'X-Api-Connect-Id': `voicecanvas-${Date.now().toString(36)}`,
         },
       }),
-      emittedTranscripts: new Set(),
       pendingAudio: [],
       pendingCommit: false,
     }
@@ -141,10 +140,6 @@ function flushPendingAudio(session: ClientSession) {
 
 function emitTranscripts(session: ClientSession, transcripts: string[]) {
   for (const transcript of transcripts) {
-    if (session.emittedTranscripts.has(transcript)) {
-      continue
-    }
-    session.emittedTranscripts.add(transcript)
     sendClientEvent(session.client, { type: 'input_audio_transcription.completed', transcript })
   }
 }

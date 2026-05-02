@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 
+const apiBaseURL = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:8787'
+
 test.beforeEach(async ({ page, request }) => {
-  await request.post('http://localhost:8787/api/dev/reset')
+  await request.post(`${apiBaseURL}/api/dev/reset`)
   await page.goto('/')
 })
 
@@ -24,7 +26,7 @@ test('voice-only workbench hides manual text controls', async ({ page, request }
   expect(initialVoiceCapsuleBox).not.toBeNull()
   expect(initialVoiceCapsuleBox!.width).toBeLessThanOrEqual(240)
 
-  await request.post('http://localhost:8787/api/commands/text-segment', {
+  await request.post(`${apiBaseURL}/api/commands/text-segment`, {
     data: { text: 'create signup flow... add OTP after phone verification... failure goes back to phone verification...' },
   })
   await page.reload()
@@ -39,7 +41,7 @@ test('voice-only workbench hides manual text controls', async ({ page, request }
   await expect(page.getByText('failure goes back to phone verification')).toBeVisible()
 
   await page.getByRole('button', { name: 'Close version history' }).click()
-  await request.post('http://localhost:8787/api/commands/text-segment', {
+  await request.post(`${apiBaseURL}/api/commands/text-segment`, {
     data: { text: 'add a step here...' },
   })
   await page.reload()
@@ -81,7 +83,7 @@ test('history panel overlays the canvas without shifting it', async ({ page }) =
 
 test('rendered diagram stays centered in the canvas', async ({ page, request }) => {
   await page.setViewportSize({ width: 1006, height: 867 })
-  await request.post('http://localhost:8787/api/commands/text-segment', {
+  await request.post(`${apiBaseURL}/api/commands/text-segment`, {
     data: {
       text: 'create signup flow... change phone number step to collect mobile number... delete verify phone step...',
     },

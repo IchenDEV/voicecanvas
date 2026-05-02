@@ -3,7 +3,6 @@ import { WebSocket } from 'ws'
 export type ClientSession = {
   client: WebSocket
   upstream: WebSocket
-  emittedTranscripts: Set<string>
   pendingAudio: Buffer[]
   pendingCommit: boolean
 }

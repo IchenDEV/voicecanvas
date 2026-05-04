@@ -1,4 +1,4 @@
-import type { EvalMetrics, EvalSampleResult } from './index'
+import { summarizeEval, type EvalMetrics, type EvalSampleResult } from './metrics'
 
 export type AlphaThresholds = {
   patchExecutableRate: number
@@ -20,7 +20,7 @@ export const alphaThresholds: AlphaThresholds = {
 }
 
 export function createAlphaEvalReport(results: EvalSampleResult[], generatedAt = new Date().toISOString()): AlphaEvalReport {
-  const metrics = summarizeAlphaResults(results)
+  const metrics = summarizeEval(results)
   return {
     generatedAt,
     metrics,
@@ -91,22 +91,4 @@ function sample(overrides: Partial<EvalSampleResult> = {}): EvalSampleResult {
     threeRoundSuccess: true,
     ...overrides,
   }
-}
-
-function summarizeAlphaResults(results: EvalSampleResult[]): EvalMetrics {
-  const total = results.length || 1
-  return {
-    total: results.length,
-    patchExecutableRate: ratio(results, (result) => result.patchExecutable, total),
-    targetHitRate: ratio(results, (result) => result.targetHit, total),
-    confirmationAccuracy: ratio(results, (result) => result.confirmationCorrect, total),
-    averageLatencyMs: Math.round(results.reduce((sum, result) => sum + result.latencyMs, 0) / total),
-    undoRate: ratio(results, (result) => result.undoUsed, total),
-    correctionRate: ratio(results, (result) => result.correctionUsed, total),
-    threeRoundSuccessRate: ratio(results, (result) => result.threeRoundSuccess, total),
-  }
-}
-
-function ratio(results: EvalSampleResult[], predicate: (result: EvalSampleResult) => boolean, total: number): number {
-  return Number((results.filter(predicate).length / total).toFixed(4))
 }

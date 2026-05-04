@@ -25,6 +25,9 @@ import {
   type DiagramLibrary,
 } from '../files/diagram-files'
 
+type WorkspaceAction = Parameters<typeof debugWorkspaceAction>[0]
+type WorkspaceStatusResolver = (workspace: WorkspaceResponse) => string
+
 export function useWorkspace() {
   const [library, setLibrary] = useState<DiagramLibrary>(() => loadDiagramLibrary() ?? emptyDiagramLibrary())
   const [canvas, setCanvas] = useState<CanvasDoc | null>(null)
@@ -63,13 +66,12 @@ export function useWorkspace() {
     })
   }, [])
 
-  const syncWorkspaceToApi = useCallback(async (workspace: WorkspaceSnapshot) => {
-    await fetch('/api/workspace/load', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(workspace),
-    })
-  }, [])
+  const syncWorkspace = useCallback(
+    (workspace: WorkspaceSnapshot) => {
+      void fetch('/api/workspace/load', jsonPost(workspace)).catch(() => setStatus('Connection issue'))
+    },
+    [],
+  )
 
   const applyWorkspace = useCallback(
     (workspace: WorkspaceResponse) => {
@@ -78,6 +80,28 @@ export function useWorkspace() {
       updateLibrary((current) => updateActiveWorkspace(current, snapshot))
     },
     [showWorkspace, updateLibrary],
+  )
+
+  const runWorkspaceRequest = useCallback(
+    async (
+      path: string,
+      init: RequestInit,
+      action: WorkspaceAction,
+      statusFromWorkspace: WorkspaceStatusResolver,
+    ) => {
+      try {
+        const response = await fetch(path, init)
+        const workspace = (await response.json()) as WorkspaceResponse
+        debugWorkspaceAction(action, workspace)
+        applyWorkspace(workspace)
+        setStatus(statusFromWorkspace(workspace))
+        return workspace
+      } catch {
+        setStatus('Connection issue')
+        return null
+      }
+    },
+    [applyWorkspace],
   )
 
   const sendTextSegment = useCallback(
@@ -93,85 +117,48 @@ export function useWorkspace() {
 
       setStatus('Planning')
       debugRecognizedSpeech(text, selectedObjectIds)
-      try {
-        const response = await fetch('/api/commands/text-segment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, selectedObjectIds, provider }),
-        })
-        const workspace = (await response.json()) as WorkspaceResponse
-        debugWorkspaceAction('text-segment', workspace)
-        applyWorkspace(workspace)
-        setStatus(workspace.status === 'needs_confirm' ? 'Which node did you mean?' : idleStatus(keepListening))
-        return workspace
-      } catch {
-        setStatus('Connection issue')
-        return null
-      }
+      return runWorkspaceRequest(
+        '/api/commands/text-segment',
+        jsonPost({ text, selectedObjectIds, provider }),
+        'text-segment',
+        (workspace) => (workspace.status === 'needs_confirm' ? 'Which node did you mean?' : idleStatus(keepListening)),
+      )
     },
-    [applyWorkspace],
+    [runWorkspaceRequest],
   )
 
   const confirmCandidate = useCallback(
     async (candidateId: string, keepListening = false) => {
       setStatus('Refining this branch')
-      try {
-        const response = await fetch('/api/patch/confirm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ candidateId }),
-        })
-        const workspace = (await response.json()) as WorkspaceResponse
-        debugWorkspaceAction('confirm-candidate', workspace)
-        applyWorkspace(workspace)
-        setStatus(idleStatus(keepListening))
-        return workspace
-      } catch {
-        setStatus('Connection issue')
-        return null
-      }
+      return runWorkspaceRequest(
+        '/api/patch/confirm',
+        jsonPost({ candidateId }),
+        'confirm-candidate',
+        () => idleStatus(keepListening),
+      )
     },
-    [applyWorkspace],
+    [runWorkspaceRequest],
   )
 
   const undoLastPatch = useCallback(
     async (keepListening = false) => {
       setStatus('Reverting')
-      try {
-        const response = await fetch('/api/patch/undo', { method: 'POST' })
-        const workspace = (await response.json()) as WorkspaceResponse
-        debugWorkspaceAction('undo', workspace)
-        applyWorkspace(workspace)
-        setStatus(idleStatus(keepListening))
-        return workspace
-      } catch {
-        setStatus('Connection issue')
-        return null
-      }
+      return runWorkspaceRequest('/api/patch/undo', { method: 'POST' }, 'undo', () => idleStatus(keepListening))
     },
-    [applyWorkspace],
+    [runWorkspaceRequest],
   )
 
   const startFromTemplate = useCallback(
     async (templateId: DiagramTemplateId) => {
       setStatus('Starting template')
-      try {
-        const response = await fetch('/api/patch/apply', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ patch: createDiagramTemplatePatch(templateId) }),
-        })
-        const workspace = (await response.json()) as WorkspaceResponse
-        debugWorkspaceAction('template', workspace)
-        applyWorkspace(workspace)
-        setStatus(workspace.status === 'failed' ? 'Template failed' : 'Ready')
-        return workspace
-      } catch {
-        setStatus('Connection issue')
-        return null
-      }
+      return runWorkspaceRequest(
+        '/api/patch/apply',
+        jsonPost({ patch: createDiagramTemplatePatch(templateId) }),
+        'template',
+        (workspace) => (workspace.status === 'failed' ? 'Template failed' : 'Ready'),
+      )
     },
-    [applyWorkspace],
+    [runWorkspaceRequest],
   )
 
   const createNewDiagram = useCallback(() => {
@@ -180,8 +167,8 @@ export function useWorkspace() {
     replaceLibrary(nextLibrary)
     showWorkspace(file.workspace)
     setStatus('Ready')
-    void syncWorkspaceToApi(file.workspace).catch(() => setStatus('Connection issue'))
-  }, [library.files, replaceLibrary, showWorkspace, syncWorkspaceToApi])
+    syncWorkspace(file.workspace)
+  }, [library.files, replaceLibrary, showWorkspace, syncWorkspace])
 
   const openDiagram = useCallback(
     (fileId: string) => {
@@ -193,9 +180,9 @@ export function useWorkspace() {
       replaceLibrary({ ...library, activeFileId: file.id })
       showWorkspace(file.workspace)
       setStatus('Ready')
-      void syncWorkspaceToApi(file.workspace).catch(() => setStatus('Connection issue'))
+      syncWorkspace(file.workspace)
     },
-    [library, replaceLibrary, showWorkspace, syncWorkspaceToApi],
+    [library, replaceLibrary, showWorkspace, syncWorkspace],
   )
 
   const renameDiagram = useCallback(
@@ -205,10 +192,10 @@ export function useWorkspace() {
       replaceLibrary(nextLibrary)
       if (nextActiveFile?.id === fileId) {
         showWorkspace(nextActiveFile.workspace)
-        void syncWorkspaceToApi(nextActiveFile.workspace).catch(() => setStatus('Connection issue'))
+        syncWorkspace(nextActiveFile.workspace)
       }
     },
-    [library, replaceLibrary, showWorkspace, syncWorkspaceToApi],
+    [library, replaceLibrary, showWorkspace, syncWorkspace],
   )
 
   const deleteDiagram = useCallback(
@@ -225,9 +212,9 @@ export function useWorkspace() {
       replaceLibrary(nextLibrary)
       showWorkspace(nextActiveFile.workspace)
       setStatus('Ready')
-      void syncWorkspaceToApi(nextActiveFile.workspace).catch(() => setStatus('Connection issue'))
+      syncWorkspace(nextActiveFile.workspace)
     },
-    [library, replaceLibrary, showWorkspace, syncWorkspaceToApi],
+    [library, replaceLibrary, showWorkspace, syncWorkspace],
   )
 
   useEffect(() => {
@@ -253,7 +240,7 @@ export function useWorkspace() {
           replaceLibrary(storedLibrary)
           const activeWorkspace = storedActiveFile?.workspace ?? storedLibrary.files[0].workspace
           showWorkspace(activeWorkspace)
-          void syncWorkspaceToApi(activeWorkspace).catch(() => setStatus('Connection issue'))
+          syncWorkspace(activeWorkspace)
           return
         }
 
@@ -276,7 +263,7 @@ export function useWorkspace() {
     return () => {
       cancelled = true
     }
-  }, [replaceLibrary, showWorkspace, syncWorkspaceToApi])
+  }, [replaceLibrary, showWorkspace, syncWorkspace])
 
   return {
     canvas,
@@ -304,4 +291,12 @@ function activeDiagramFile(library: DiagramLibrary): DiagramFile | null {
 
 function idleStatus(keepListening: boolean) {
   return keepListening ? 'Listening' : 'Ready'
+}
+
+function jsonPost(body: unknown): RequestInit {
+  return {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }
 }

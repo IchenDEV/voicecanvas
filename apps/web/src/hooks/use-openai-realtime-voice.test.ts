@@ -33,6 +33,25 @@ describe('OpenAI realtime voice helpers', () => {
         sessionPath: '/api/realtime/openai/session',
       }),
     ).toBe('gpt-realtime-mini')
+    expect(
+      realtimeModelFromProviderPayload({
+        defaultProvider: 'openai-realtime',
+        providers: [
+          {
+            provider: 'openai-realtime',
+            configured: true,
+            model: 'gpt-realtime-2',
+            sessionPath: '/api/realtime/openai/session',
+          },
+          {
+            provider: 'gemini-live',
+            configured: true,
+            model: 'gemini-3.1-flash-live-preview',
+            tokenPath: '/api/realtime/gemini/token',
+          },
+        ],
+      }),
+    ).toBe('gpt-realtime-2')
 
     expect(realtimeModelFromProviderPayload({ provider: 'other', model: 'gpt-realtime-mini' })).toBeNull()
     expect(realtimeModelFromProviderPayload({ provider: 'openai-realtime', model: '' })).toBeNull()

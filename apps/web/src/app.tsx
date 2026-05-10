@@ -4,9 +4,11 @@ import { CommandBar } from './components/command-bar'
 import { HistorySheet } from './components/history-sheet'
 import { VoiceCapsule } from './components/voice-capsule'
 import { exportCanvasPng } from './export/export-canvas'
+import { useGeminiLiveVoice } from './hooks/use-gemini-live-voice'
 import { useMermaidConfig } from './hooks/use-mermaid-config'
 import { useOpenAIRealtimeVoice } from './hooks/use-openai-realtime-voice'
 import { useWorkspace } from './hooks/use-workspace'
+import type { RealtimeProviderName } from './types'
 import './styles/base.css'
 import './styles/command-bar.css'
 import './styles/canvas.css'
@@ -17,6 +19,7 @@ import './styles/responsive.css'
 function App() {
   useMermaidConfig()
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [realtimeProvider, setRealtimeProvider] = useState<RealtimeProviderName>('openai-realtime')
   const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([])
   const canvasExportRef = useRef<HTMLDivElement | null>(null)
   const {
@@ -42,15 +45,37 @@ function App() {
     [canvas, selectedObjectIds],
   )
 
-  const handleVoiceCommand = useCallback(
+  const handleOpenAIRealtimeCommand = useCallback(
     async (command: string) => {
       await sendTextSegment(command, currentSelection, true, 'openai-realtime')
     },
     [currentSelection, sendTextSegment],
   )
+  const handleGeminiLiveCommand = useCallback(
+    async (command: string) => {
+      await sendTextSegment(command, currentSelection, true, 'gemini-live')
+    },
+    [currentSelection, sendTextSegment],
+  )
 
-  const mic = useOpenAIRealtimeVoice({ onCommand: handleVoiceCommand, setStatus })
+  const openAIMic = useOpenAIRealtimeVoice({ onCommand: handleOpenAIRealtimeCommand, setStatus })
+  const geminiMic = useGeminiLiveVoice({ onCommand: handleGeminiLiveCommand, setStatus })
+  const mic = realtimeProvider === 'gemini-live' ? geminiMic : openAIMic
   const visibleStatus = pendingPatch ? 'Confirmation needed' : mic.status ?? status
+
+  const handleRealtimeProviderChange = useCallback(
+    (provider: RealtimeProviderName) => {
+      if (provider === realtimeProvider) {
+        return
+      }
+
+      openAIMic.stopRealtimeMic()
+      geminiMic.stopRealtimeMic()
+      setRealtimeProvider(provider)
+      setStatus('Ready')
+    },
+    [geminiMic, openAIMic, realtimeProvider, setStatus],
+  )
 
   const handleUndo = useCallback(() => {
     void undoLastPatch(mic.isRealtimeActive)
@@ -95,7 +120,13 @@ function App() {
         onConfirmCandidate={handleConfirmCandidate}
       />
       {isHistoryOpen ? <HistorySheet history={history} /> : null}
-      <VoiceCapsule isRealtimeActive={mic.isRealtimeActive} status={visibleStatus} onToggle={mic.toggleRealtimeMic} />
+      <VoiceCapsule
+        isRealtimeActive={mic.isRealtimeActive}
+        provider={realtimeProvider}
+        status={visibleStatus}
+        onProviderChange={handleRealtimeProviderChange}
+        onToggle={mic.toggleRealtimeMic}
+      />
     </main>
   )
 }

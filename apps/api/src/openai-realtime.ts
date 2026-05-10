@@ -1,6 +1,6 @@
 export const OPENAI_REALTIME_PROVIDER = 'openai-realtime'
 export const OPENAI_REALTIME_SESSION_PATH = '/api/realtime/openai/session'
-export const DEFAULT_OPENAI_REALTIME_MODEL = 'gpt-realtime-1.5'
+export const DEFAULT_OPENAI_REALTIME_MODEL = 'gpt-realtime-2'
 
 const OPENAI_REALTIME_CALLS_URL = 'https://api.openai.com/v1/realtime/calls'
 

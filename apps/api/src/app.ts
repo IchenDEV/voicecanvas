@@ -10,9 +10,10 @@ import {
 import type { CreateAppOptions } from './workspace/types'
 import {
   OPENAI_REALTIME_SESSION_PATH,
-  openAIRealtimeProviderPayload,
   proxyOpenAIRealtimeSession,
 } from './openai-realtime'
+import { GEMINI_LIVE_TOKEN_PATH, createGeminiLiveToken } from './gemini-live'
+import { realtimeProvidersPayload } from './realtime-providers'
 import { createWorkspaceStore } from './workspace/store'
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -33,9 +34,15 @@ export function createApp(options: CreateAppOptions = {}) {
   })
   app.get('/api/realtime/provider', (c) =>
     c.json(
-      openAIRealtimeProviderPayload({
-        apiKey: options.openaiAPIKey,
-        model: options.openaiRealtimeModel,
+      realtimeProvidersPayload({
+        openai: {
+          apiKey: options.openaiAPIKey,
+          model: options.openaiRealtimeModel,
+        },
+        gemini: {
+          apiKey: options.geminiAPIKey,
+          model: options.geminiLiveModel,
+        },
       }),
     ),
   )
@@ -43,6 +50,12 @@ export function createApp(options: CreateAppOptions = {}) {
     proxyOpenAIRealtimeSession(c.req.raw, {
       apiKey: options.openaiAPIKey,
       model: options.openaiRealtimeModel,
+    }),
+  )
+  app.post(GEMINI_LIVE_TOKEN_PATH, () =>
+    createGeminiLiveToken({
+      apiKey: options.geminiAPIKey,
+      model: options.geminiLiveModel,
     }),
   )
   app.post('/api/dev/reset', (c) => c.json(store.reset()))

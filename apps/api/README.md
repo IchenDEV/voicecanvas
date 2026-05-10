@@ -18,7 +18,7 @@ http://localhost:8787
 
 - Command endpoints for text segments and patch execution.
 - In-memory `CanvasDoc` workspace state for the prototype.
-- OpenAI Realtime session proxy.
+- Realtime voice provider settings, OpenAI session proxy, and Gemini Live token issuing.
 - JSON export.
 
 ## Test

@@ -55,6 +55,26 @@ describe('VoiceCanvas command API', () => {
     expect(payload.results[0].segment.provider).toBe('openai-realtime')
   })
 
+  it('keeps Gemini Live as the segment provider for spoken commands', async () => {
+    let provider = ''
+    const app = createApp({
+      patchCompiler: async ({ segment }) => {
+        provider = segment.provider
+        return patchWithNode(segment, 'Compiled Gemini voice command')
+      },
+    })
+
+    const response = await postJson(app, '/api/commands/text-segment', {
+      text: 'rename Mermaid rendering',
+      provider: 'gemini-live',
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(provider).toBe('gemini-live')
+    expect(payload.results[0].segment.provider).toBe('gemini-live')
+  })
+
   it('processes continuous text segments into ordered patch history', async () => {
     const app = createApp()
     const response = await postJson(app, '/api/commands/text-segment', {

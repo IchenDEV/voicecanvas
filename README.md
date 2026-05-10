@@ -46,13 +46,13 @@ The long-term bet is simple: diagrams should change at the speed of a conversati
 
 | Area | Status | What it does |
 | --- | --- | --- |
-| Voice-first command flow | Working prototype | Accepts text segments and OpenAI Realtime voice input. |
+| Voice-first command flow | Working prototype | Accepts text segments plus selectable OpenAI Realtime or Gemini Live voice input. |
 | Patch-based editing | Working prototype | Converts commands into atomic graph operations. |
 | Validation layer | Working prototype | Checks patch drafts before they mutate the canvas. |
 | Mermaid renderer | Working prototype | Renders the first diagram surface with Mermaid. |
 | Low-confidence confirmation | Working prototype | Shows target candidates before applying ambiguous edits. |
 | History and undo | Working prototype | Stores applied patches and restores the previous canvas state. |
-| OpenAI Realtime voice | Optional | Uses `openai/realtime-voice-component` in the browser and proxies sessions through the API server. |
+| Realtime voice providers | Optional | Supports OpenAI Realtime through the API proxy and Gemini Live through short-lived browser tokens. |
 | External patch compiler | Optional | Uses an OpenAI-compatible model endpoint when configured. |
 | Local mock compiler | Built in | Runs the demo without model credentials. |
 | JSON export | Working prototype | Exports the current structured canvas document. |
@@ -126,7 +126,10 @@ Create `.env` from `.env.example` and fill only the providers you want to use.
 
 ```bash
 OPENAI_API_KEY=
-OPENAI_REALTIME_MODEL=gpt-realtime-1.5
+OPENAI_REALTIME_MODEL=gpt-realtime-2
+
+GEMINI_API_KEY=
+GEMINI_LIVE_MODEL=gemini-3.1-flash-live-preview
 ```
 
 ### External Patch Compiler
@@ -153,7 +156,7 @@ When the patch compiler variables are empty, VoiceCanvas uses the local mock com
 | `pnpm test:e2e` | Run Playwright smoke tests. |
 | `pnpm check:prototype` | Run the full Prototype check suite. |
 | `pnpm check:alpha` | Run the Alpha check suite and local eval report. |
-| `pnpm check:alpha:realtime` | Run the OpenAI Realtime session proxy tests. |
+| `pnpm check:alpha:realtime` | Run the realtime provider API tests. |
 
 ## API Surface
 
@@ -169,6 +172,7 @@ When the patch compiler variables are empty, VoiceCanvas uses the local mock com
 | `POST` | `/api/patch/undo` | Restore the previous patch state. |
 | `GET` | `/api/realtime/provider` | Read realtime voice provider settings. |
 | `POST` | `/api/realtime/openai/session` | Proxy WebRTC session offers to OpenAI Realtime. |
+| `POST` | `/api/realtime/gemini/token` | Issue a short-lived Gemini Live browser token. |
 | `GET` | `/api/export/json` | Export the current `CanvasDoc`. |
 
 ## Development Notes

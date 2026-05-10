@@ -9,6 +9,7 @@ export type PatchStatus = 'draft' | 'needs_confirm' | 'applied' | 'failed' | 'ro
 export type VoiceProviderName =
   | 'text-sim'
   | 'openai-realtime'
+  | 'gemini-live'
 
 export type GraphPoint = {
   x: number

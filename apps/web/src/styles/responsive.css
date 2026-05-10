@@ -27,8 +27,17 @@
   .voice-capsule {
     left: 16px;
     right: auto;
-    grid-template-columns: 38px minmax(64px, auto);
+    grid-template-columns: 38px minmax(54px, 1fr);
     border-radius: 999px;
     transform: none;
+  }
+
+  .voice-provider-switch {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .voice-provider-button {
+    width: 100%;
   }
 }

@@ -12,6 +12,8 @@ export type PatchCompiler = (input: PatchCompilerInput) => Patch | Promise<Patch
 export type CreateAppOptions = {
   openaiAPIKey?: string
   openaiRealtimeModel?: string
+  geminiAPIKey?: string
+  geminiLiveModel?: string
   modelPatchCompiler?: Partial<ModelPatchCompilerConfig>
   patchCompiler?: PatchCompiler
 }

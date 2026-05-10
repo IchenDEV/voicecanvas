@@ -70,13 +70,14 @@ export const acceptanceCases: AcceptanceCase[] = [
     requiredForStage1: true,
   },
   {
-    id: 'realtime-openai-voice-component',
-    title: 'Realtime voice uses OpenAI component',
+    id: 'realtime-selectable-providers',
+    title: 'Realtime voice supports selectable providers',
     layer: 'realtime',
     command: 'pnpm --filter @voicecanvas/api test',
     expected: [
-      'GET /api/realtime/provider returns provider openai-realtime.',
+      'GET /api/realtime/provider returns OpenAI Realtime and Gemini Live options.',
       'POST /api/realtime/openai/session requires OPENAI_API_KEY before proxying.',
+      'POST /api/realtime/gemini/token requires GEMINI_API_KEY before issuing a Live token.',
       'The session route forwards multipart WebRTC offers to OpenAI Realtime calls.',
       'The local text simulation path remains usable without credentials.',
     ],

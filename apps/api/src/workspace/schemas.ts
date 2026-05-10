@@ -108,7 +108,7 @@ const patchSchema = z.object({
 export const textSegmentRequestSchema = z.object({
   text: z.string().min(1),
   selectedObjectIds: z.array(z.string()).optional().default([]),
-  provider: z.enum(['text-sim', 'openai-realtime']).optional().default('text-sim'),
+  provider: z.enum(['text-sim', 'openai-realtime', 'gemini-live']).optional().default('text-sim'),
 })
 
 export const patchApplyRequestSchema = z.object({

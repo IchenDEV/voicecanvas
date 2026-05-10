@@ -1,7 +1,7 @@
 {
   "name": "@voicecanvas/api",
   "version": "0.0.0",
-  "description": "Hono API and OpenAI Realtime session proxy for VoiceCanvas.",
+  "description": "Hono API and realtime voice provider endpoints for VoiceCanvas.",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@google/genai": "^2.0.1",
     "@hono/node-server": "^1.19.14",
     "@voicecanvas/ai": "workspace:*",
     "@voicecanvas/core": "workspace:*",

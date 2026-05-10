@@ -133,10 +133,16 @@ export function useOpenAIRealtimeVoice({ onCommand, setStatus }: OpenAIRealtimeV
   })
 
   const isRealtimeActive = voice.connected || voice.status === 'connecting'
-  const toggleRealtimeMic = useCallback(() => {
+  const stopRealtimeMic = useCallback(() => {
     if (voice.connected || voice.status === 'connecting') {
       voice.disconnect()
       setStatus('Ready')
+    }
+  }, [setStatus, voice])
+
+  const toggleRealtimeMic = useCallback(() => {
+    if (voice.connected || voice.status === 'connecting') {
+      stopRealtimeMic()
       return
     }
 
@@ -146,21 +152,30 @@ export function useOpenAIRealtimeVoice({ onCommand, setStatus }: OpenAIRealtimeV
       debugRealtimeEvent({ type: 'voice.connect.failed', error: errorMessage(error) })
       setStatus(status)
     })
-  }, [setStatus, voice])
+  }, [setStatus, stopRealtimeMic, voice])
 
   return {
     isRealtimeActive,
     status: voiceStatusLabel(voice.status, voice.activity, voice.connected),
     toggleRealtimeMic,
+    stopRealtimeMic,
   }
 }
 
 export function realtimeModelFromProviderPayload(payload: unknown) {
-  if (!isRecord(payload) || payload.provider !== 'openai-realtime') {
+  if (!isRecord(payload)) {
     return null
   }
 
-  return stringValue(payload.model) || null
+  if (payload.provider === 'openai-realtime') {
+    return stringValue(payload.model) || null
+  }
+
+  const providers = Array.isArray(payload.providers) ? payload.providers : []
+  const openAIProvider = providers.find(
+    (provider): provider is Record<string, unknown> => isRecord(provider) && provider.provider === 'openai-realtime',
+  )
+  return stringValue(openAIProvider?.model) || null
 }
 
 export function voiceStatusLabel(status: VoiceControlStatus, activity: VoiceControlActivity, connected: boolean) {

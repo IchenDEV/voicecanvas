@@ -1,9 +1,31 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp } from './app'
 
+const geminiMocks = vi.hoisted(() => {
+  const createAuthToken = vi.fn(async () => ({ name: 'gemini-token-test' }))
+  return {
+    createAuthToken,
+    GoogleGenAI: vi.fn(function GoogleGenAIMock() {
+      return {
+        authTokens: {
+          create: createAuthToken,
+        },
+      }
+    }),
+  }
+})
+
+vi.mock('@google/genai', () => ({
+  GoogleGenAI: geminiMocks.GoogleGenAI,
+  Modality: { TEXT: 'TEXT' },
+  Type: { OBJECT: 'OBJECT', STRING: 'STRING' },
+}))
+
 describe('VoiceCanvas realtime API', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.clearAllMocks()
+    geminiMocks.createAuthToken.mockResolvedValue({ name: 'gemini-token-test' })
   })
 
   it('uses OpenAI Realtime as the default realtime provider', async () => {
@@ -15,12 +37,32 @@ describe('VoiceCanvas realtime API', () => {
     expect(response.status).toBe(200)
     expect(payload.provider).toBe('openai-realtime')
     expect(payload.configured).toBe(false)
-    expect(payload.model).toBe('gpt-realtime-1.5')
+    expect(payload.model).toBe('gpt-realtime-2')
     expect(payload.sessionPath).toBe('/api/realtime/openai/session')
+    expect(payload.defaultProvider).toBe('openai-realtime')
+    expect(payload.providers).toEqual([
+      {
+        provider: 'openai-realtime',
+        configured: false,
+        model: 'gpt-realtime-2',
+        sessionPath: '/api/realtime/openai/session',
+      },
+      {
+        provider: 'gemini-live',
+        configured: false,
+        model: 'gemini-3.1-flash-live-preview',
+        tokenPath: '/api/realtime/gemini/token',
+      },
+    ])
   })
 
   it('reports OpenAI Realtime as configured when the API key is present', async () => {
-    const app = createApp({ openaiAPIKey: 'sk-test', openaiRealtimeModel: 'gpt-realtime-mini' })
+    const app = createApp({
+      openaiAPIKey: 'sk-test',
+      openaiRealtimeModel: 'gpt-realtime-mini',
+      geminiAPIKey: 'gemini-test',
+      geminiLiveModel: 'gemini-live-test',
+    })
 
     const response = await app.request('/api/realtime/provider')
     const payload = await response.json()
@@ -30,6 +72,12 @@ describe('VoiceCanvas realtime API', () => {
     expect(payload.configured).toBe(true)
     expect(payload.model).toBe('gpt-realtime-mini')
     expect(payload.sessionPath).toBe('/api/realtime/openai/session')
+    expect(payload.providers[1]).toEqual({
+      provider: 'gemini-live',
+      configured: true,
+      model: 'gemini-live-test',
+      tokenPath: '/api/realtime/gemini/token',
+    })
   })
 
   it('requires OPENAI_API_KEY before opening a realtime session', async () => {
@@ -81,5 +129,48 @@ describe('VoiceCanvas realtime API', () => {
       model: 'gpt-realtime-mini',
       instructions: 'test instructions',
     })
+  })
+
+  it('requires GEMINI_API_KEY before issuing a Gemini Live token', async () => {
+    const app = createApp()
+
+    const response = await app.request('/api/realtime/gemini/token', { method: 'POST' })
+
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toEqual({ error: 'GEMINI_API_KEY is required.' })
+  })
+
+  it('creates a scoped Gemini Live token for the browser session', async () => {
+    const app = createApp({ geminiAPIKey: 'gemini-test', geminiLiveModel: 'gemini-live-test' })
+
+    const response = await app.request('/api/realtime/gemini/token', { method: 'POST' })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toEqual({
+      provider: 'gemini-live',
+      model: 'gemini-live-test',
+      token: 'gemini-token-test',
+    })
+    expect(geminiMocks.GoogleGenAI).toHaveBeenCalledWith({
+      apiKey: 'gemini-test',
+      httpOptions: { apiVersion: 'v1alpha' },
+    })
+    expect(geminiMocks.createAuthToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          uses: 1,
+          httpOptions: { apiVersion: 'v1alpha' },
+          liveConnectConstraints: expect.objectContaining({
+            model: 'gemini-live-test',
+            config: expect.objectContaining({
+              responseModalities: ['TEXT'],
+              inputAudioTranscription: {},
+              tools: expect.any(Array),
+            }),
+          }),
+        }),
+      }),
+    )
   })
 })

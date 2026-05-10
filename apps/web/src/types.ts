@@ -1,5 +1,7 @@
 import type { CanvasDoc, Patch, VoiceSegment } from '@voicecanvas/core'
 
+export type RealtimeProviderName = 'openai-realtime' | 'gemini-live'
+
 export type WorkspaceResponse = {
   canvas: CanvasDoc
   history: Patch[]
@@ -16,8 +18,9 @@ export type WorkspaceResult = {
 }
 
 export type RealtimeProviderResponse = {
-  provider: 'openai-realtime'
+  provider: RealtimeProviderName
   configured: boolean
   model: string
-  sessionPath: string
+  sessionPath?: string
+  tokenPath?: string
 }

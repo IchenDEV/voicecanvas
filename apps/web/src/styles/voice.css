@@ -6,7 +6,7 @@
   display: grid;
   width: fit-content;
   max-width: calc(100vw - 32px);
-  grid-template-columns: 38px minmax(64px, auto);
+  grid-template-columns: 38px minmax(64px, auto) auto;
   align-items: center;
   gap: 12px;
   padding: 10px 18px 10px 10px;
@@ -36,6 +36,12 @@
   box-shadow: 0 0 0 7px rgba(255, 90, 61, 0.14);
 }
 
+.mic-orb:focus-visible,
+.voice-provider-button:focus-visible {
+  outline: 2px solid rgba(25, 195, 125, 0.8);
+  outline-offset: 2px;
+}
+
 .voice-live-status {
   min-width: 0;
   max-width: 260px;
@@ -45,4 +51,34 @@
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.voice-provider-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(58px, auto));
+  overflow: hidden;
+  border: 1px solid rgba(25, 25, 25, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.voice-provider-button {
+  min-width: 58px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: #5a5a5a;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.voice-provider-button.is-selected {
+  background: #111;
+  color: #fff;
+}
+
+.voice-provider-button.is-selected:focus-visible {
+  outline-offset: -2px;
 }
